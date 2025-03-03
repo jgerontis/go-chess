@@ -4,6 +4,7 @@
 
 I love the game of chess, and while I don't play very often, I still usually do my daily puzzles.
 I also have wanted to do more programming for fun, and I thought this would be a good project to work on.
+Also, I haven't worked as much in Go lately as I would like, so I thought this would be a good opportunity to get back into it.
 
 ## How?
 
