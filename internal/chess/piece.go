@@ -75,3 +75,7 @@ func (p Piece) FenChar() string {
 	}
 	return char
 }
+
+func (p Piece) CanMove(isWhiteTurn bool) bool {
+	return p.Color() == WHITE && isWhiteTurn || p.Color() == BLACK && !isWhiteTurn
+}

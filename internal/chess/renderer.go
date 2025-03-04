@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/srwiley/oksvg"
 	"github.com/srwiley/rasterx"
 )
@@ -19,6 +20,14 @@ const (
 )
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	// write player turn in the top left
+	var turn string
+	if g.WhiteToMove {
+		turn = "White to move"
+	} else {
+		turn = "Black to move"
+	}
+	ebitenutil.DebugPrint(screen, turn)
 	margin := (WindowWidth - BoardSize) / 2
 	// draw the Background within the margins
 	opts := &ebiten.DrawImageOptions{}
