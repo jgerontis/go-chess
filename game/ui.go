@@ -1,4 +1,4 @@
-package chess
+package game
 
 import (
 	"bytes"
@@ -137,7 +137,7 @@ func loadSVG(path string, width, height int) (*ebiten.Image, error) {
 	return ebitenImg, nil
 }
 
-func (g *Game) MouseCoordsToBoardCoords(x, y int) (int, int) {
+func (g *Game) mouseCoordsToBoardCoords(x, y int) (int, int) {
 	margin := (WindowWidth - BoardSize) / 2
 	if x < margin || x > margin+BoardSize || y < margin || y > margin+BoardSize {
 		return -1, -1
@@ -149,7 +149,7 @@ func (g *Game) MouseCoordsToBoardCoords(x, y int) (int, int) {
 	return rank, file
 }
 
-func GenerateBackground() (*ebiten.Image, error) {
+func generateBackground() (*ebiten.Image, error) {
 	// make a background image, and light and dark squares
 	background := ebiten.NewImage(BoardSize, BoardSize)
 	darkSquare := ebiten.NewImage(SquareSize, SquareSize)

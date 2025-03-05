@@ -1,4 +1,4 @@
-package chess
+package game
 
 import (
 	"fmt"
@@ -7,30 +7,35 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
+// Game is going to manage the game state and interface with ebiten
 type Game struct {
-	Board       *Board
-	PieceImages map[Piece]*ebiten.Image
-	WhiteToMove bool
-	Selected    int
-	Dragging    bool
+	AudioPlayer *AudioPlayer
 	Background  *ebiten.Image
+	Board       *Board
+	Dragging    bool
+	PieceImages map[Piece]*ebiten.Image
+	Player1     string
+	Player2     string
+	Selected    int
+	WhiteToMove bool
 }
 
-func NewGame(fen string) *Game {
+func NewGame(FEN string) *Game {
+	background, err := generateBackground()
+	if err != nil {
+		panic(err)
+	}
+
+	board, err := NewBoardFromFEN(FEN)
+	if err != nil {
+		panic(err)
+	}
+
 	images, err := loadPieceImages()
 	if err != nil {
 		panic(err)
 	}
 
-	background, err := GenerateBackground()
-	if err != nil {
-		panic(err)
-	}
-
-	board, err := NewBoardFromFEN(fen)
-	if err != nil {
-		panic(err)
-	}
 	return &Game{
 		Board:       board,
 		PieceImages: images,
@@ -44,7 +49,7 @@ func NewGame(fen string) *Game {
 func (g *Game) Update() error {
 	// start by getting the mouse coordinates
 	x, y := ebiten.CursorPosition()
-	rank, file := g.MouseCoordsToBoardCoords(x, y)
+	rank, file := g.mouseCoordsToBoardCoords(x, y)
 	// do nothing if the mouse is off the board
 	if rank < 0 || file < 0 {
 		g.Dragging = false

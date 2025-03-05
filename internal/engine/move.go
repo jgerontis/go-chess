@@ -1,4 +1,4 @@
-package chess
+package engine
 
 type Move uint16
 

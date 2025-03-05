@@ -1,11 +1,13 @@
 package main
 
+// the user just clicks for both black and white, no AI
+
 import (
 	"log"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/jgerontis/go-chess/internal/chess"
+	"github.com/jgerontis/go-chess/game"
 	"golang.org/x/exp/slog"
 )
 
@@ -17,7 +19,6 @@ func main() {
 	// start the game
 	slog.Log(nil, slog.LevelInfo, "Starting Go Chess")
 
-	var game *chess.Game
 	var fenString string
 	if len(os.Args) > 1 {
 		slog.Info("Using provided FEN string", "fen", fenString)
@@ -26,7 +27,8 @@ func main() {
 		slog.Info("No FEN string provided, starting with default position")
 		fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
 	}
-	game = chess.NewGame(fenString)
+
+	game := game.NewGame(fenString)
 
 	ebiten.SetWindowSize(800, 800)
 	ebiten.SetWindowTitle("Go Chess")
