@@ -1,4 +1,4 @@
-package game
+package gui
 
 import (
 	"bytes"
@@ -21,13 +21,16 @@ const (
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	// write player turn in the top left
-	var turn string
-	if g.WhiteToMove {
-		turn = "White to move"
-	} else {
-		turn = "Black to move"
+	// if g.Board.WhiteToMove {
+	// 	turn = "White to move"
+	// } else {
+	// 	turn = "Black to move"
+	// }
+	legalMoves := ""
+	for _, move := range g.Board.LegalMoves {
+		legalMoves = legalMoves + move.String() + " "
 	}
-	ebitenutil.DebugPrint(screen, turn)
+	ebitenutil.DebugPrint(screen, legalMoves)
 	margin := (WindowWidth - BoardSize) / 2
 	// draw the Background within the margins
 	opts := &ebiten.DrawImageOptions{}
@@ -38,22 +41,35 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			// get the graphical coordinates of the square
 			x := margin + file*SquareSize
 			y := margin + (7-rank)*SquareSize
+			index := rank*8 + file
 
 			// check if the square is selected
-			squareSelected := g.Selected == rank*8+file
+			squareSelected := g.Selected == index
 
-			// draw a red square if the square is selected
+			// highlight selected square or the squares from the prior move
 			if squareSelected {
 				square := ebiten.NewImage(SquareSize, SquareSize)
-				squareColor := color.RGBA{255, 0, 0, 255}
+				squareColor := color.RGBA{255, 0, 0, 100}
 				square.Fill(squareColor)
 				squareOpts := &ebiten.DrawImageOptions{}
 				squareOpts.GeoM.Translate(float64(x), float64(y))
 				screen.DrawImage(square, squareOpts)
 			}
+			if g.PrevMove != 0 {
+				source := g.PrevMove.Source()
+				target := g.PrevMove.Target()
+				if index == source || index == target {
+					square := ebiten.NewImage(SquareSize, SquareSize)
+					squareColor := color.RGBA{0, 255, 0, 100}
+					square.Fill(squareColor)
+					squareOpts := &ebiten.DrawImageOptions{}
+					squareOpts.GeoM.Translate(float64(x), float64(y))
+					screen.DrawImage(square, squareOpts)
+				}
+			}
 
 			// get the piece on the square, skip if there is no piece
-			piece := g.Board.GetPiece(rank, file)
+			piece := g.Board.GetPieceAtIndex(index)
 			if piece.IsNone() {
 				continue
 			}
@@ -64,7 +80,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 
 			// draw the piece on the square
-			pieceImg := g.PieceImages[piece]
+			pieceImg := g.PieceImages[piece.FenChar()]
 			pieceOpts := &ebiten.DrawImageOptions{}
 			// if the piece is being dragged, move it with the mouse
 			pieceOpts.GeoM.Translate(float64(x), float64(y))
@@ -77,7 +93,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		x -= SquareSize / 2
 		y -= SquareSize / 2
 		// draw the piece being dragged
-		pieceImage := g.PieceImages[g.Board[g.Selected]]
+		pieceImage := g.PieceImages[g.Board.GetPieceAtIndex(g.Selected).FenChar()]
 		opts := &ebiten.DrawImageOptions{}
 		opts.GeoM.Translate(float64(x), float64(y))
 		screen.DrawImage(pieceImage, opts)
@@ -88,23 +104,20 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return WindowWidth, WindowHeight
 }
 
-func loadPieceImages() (map[Piece]*ebiten.Image, error) {
-	pieces := make(map[Piece]*ebiten.Image)
-	// load the images for the pieces
-	pieces[Piece(WHITE|KING)], _ = loadSVG("assets/images/wk.svg", SquareSize, SquareSize)
-	pieces[Piece(BLACK|KING)], _ = loadSVG("assets/images/bk.svg", SquareSize, SquareSize)
-	pieces[Piece(WHITE|QUEEN)], _ = loadSVG("assets/images/wq.svg", SquareSize, SquareSize)
-	pieces[Piece(BLACK|QUEEN)], _ = loadSVG("assets/images/bq.svg", SquareSize, SquareSize)
-	pieces[Piece(WHITE|ROOK)], _ = loadSVG("assets/images/wr.svg", SquareSize, SquareSize)
-	pieces[Piece(BLACK|ROOK)], _ = loadSVG("assets/images/br.svg", SquareSize, SquareSize)
-	pieces[Piece(WHITE|BISHOP)], _ = loadSVG("assets/images/wb.svg", SquareSize, SquareSize)
-	pieces[Piece(BLACK|BISHOP)], _ = loadSVG("assets/images/bb.svg", SquareSize, SquareSize)
-	pieces[Piece(WHITE|KNIGHT)], _ = loadSVG("assets/images/wn.svg", SquareSize, SquareSize)
-	pieces[Piece(BLACK|KNIGHT)], _ = loadSVG("assets/images/bn.svg", SquareSize, SquareSize)
-	pieces[Piece(WHITE|PAWN)], _ = loadSVG("assets/images/wp.svg", SquareSize, SquareSize)
-	pieces[Piece(BLACK|PAWN)], _ = loadSVG("assets/images/bp.svg", SquareSize, SquareSize)
+// loadSVG("assets/images/"+"bp"+".svg", SquareSize, SquareSize)
 
-	return pieces, nil
+func loadPieceImages() (map[string]*ebiten.Image, error) {
+	pieceImages := make(map[string]*ebiten.Image)
+	fenChars := []string{"p", "n", "b", "r", "q", "k", "P", "N", "B", "R", "Q", "K"}
+	fileNames := []string{"bp", "bn", "bb", "br", "bq", "bk", "wp", "wn", "wb", "wr", "wq", "wk"}
+	for i, fenChar := range fenChars {
+		img, err := loadSVG("assets/images/"+fileNames[i]+".svg", SquareSize, SquareSize)
+		if err != nil {
+			return nil, err
+		}
+		pieceImages[fenChar] = img
+	}
+	return pieceImages, nil
 }
 
 func loadSVG(path string, width, height int) (*ebiten.Image, error) {
@@ -137,6 +150,7 @@ func loadSVG(path string, width, height int) (*ebiten.Image, error) {
 	return ebitenImg, nil
 }
 
+// translates where the mouse is to board rank and file, returns -1, -1 if off the board
 func (g *Game) mouseCoordsToBoardCoords(x, y int) (int, int) {
 	margin := (WindowWidth - BoardSize) / 2
 	if x < margin || x > margin+BoardSize || y < margin || y > margin+BoardSize {
@@ -149,6 +163,7 @@ func (g *Game) mouseCoordsToBoardCoords(x, y int) (int, int) {
 	return rank, file
 }
 
+// pre-generates the background image so we only do it once
 func generateBackground() (*ebiten.Image, error) {
 	// make a background image, and light and dark squares
 	background := ebiten.NewImage(BoardSize, BoardSize)

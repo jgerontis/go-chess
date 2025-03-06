@@ -1,30 +1,28 @@
 package main
 
+// the user just clicks for both black and white, no AI
+
 import (
 	"log"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jgerontis/go-chess/gui"
-	"golang.org/x/exp/slog"
 )
 
 func main() {
-	// set up slog
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
-
 	// start the game
-	slog.Log(nil, slog.LevelInfo, "Starting Go Chess")
+	log.Println("Starting Go Chess")
 
 	var fenString string
 	if len(os.Args) > 1 {
-		slog.Info("Using provided FEN string", "fen", fenString)
+		log.Println("Using provided FEN string: ", fenString)
 		fenString = os.Args[1]
 	} else {
-		slog.Info("No FEN string provided, starting with default position")
-		fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+		log.Println("No FEN string provided, starting with default position")
+		fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 	}
+
 	game := gui.NewGame(fenString)
 
 	ebiten.SetWindowSize(800, 800)
@@ -34,7 +32,6 @@ func main() {
 	game.PrintBoard()
 
 	if err := ebiten.RunGame(game); err != nil {
-		slog.Error("Failed to run game", "error", err)
-		log.Fatal(err)
+		log.Fatal("Failed to run game, error: ", err)
 	}
 }

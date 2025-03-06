@@ -8,18 +8,19 @@ Also, I haven't worked as much in Go lately as I would like, so I thought this w
 
 ## How?
 
-For now, you can run it with `go run ./cmd/main.go {optional FEN string goes here}`
-I'll look into adding more features later.
+For now, you can run it with `go run ./cmd/debug {optional FEN string goes here}`
 
 ## Progress report:
 
-Done:
+### Done:
 
 - Board representation
-- FEN parsing (haven't done castling and turn yet)
+- Basic FEN parsing to load a board state
 - Basic piece moving
-  To do:
 - Turn order
+
+### To do:
+
 - Legal move calculation
 - Restricting moves based on legal moves
 - Checks and checkmates
