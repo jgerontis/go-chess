@@ -1,7 +1,6 @@
 package gui
 
 import (
-	"fmt"
 	"slices"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -49,6 +48,9 @@ func NewGame(FEN string) *Game {
 
 func (g *Game) MakeMove(move chess.Move) {
 	g.Board.MakeMove(move)
+	// play a sound
+	// g.AudioPlayer.PlaySound("move")
+	g.PrevMove = move
 	// only generate legal moves when a move is made
 	g.Board.GenerateLegalMoves()
 }
@@ -87,6 +89,7 @@ func (g *Game) Update() error {
 			// if moveAttempt in legalmoves
 			if g.IsLegalMove(moveAttempt) {
 				g.MakeMove(moveAttempt)
+				g.Selected = -1
 				return nil
 			}
 			// if it's an illegal move, unselect the piece
@@ -118,22 +121,22 @@ func (g *Game) Update() error {
 	return nil
 }
 
-func (g *Game) PrintBoard() {
-	fmt.Println("  a b c d e f g h")
-	fmt.Println(" ┌─┬─┬─┬─┬─┬─┬─┬─┐")
-	for row := 7; row >= 0; row-- {
-		fmt.Printf("%d│", row+1)
-		for col := range 8 {
-			idx := row*8 + col
-			fmt.Printf("%s│", g.Board.GetPieceAtIndex(idx))
-		}
-		if row > 0 {
-			fmt.Println("\n │─┼─┼─┼─┼─┼─┼─┼─│")
-		}
-	}
-	fmt.Println("\n └─┴─┴─┴─┴─┴─┴─┴─┘")
-	fmt.Println("  a b c d e f g h")
-}
+// func (g *Game) PrintBoard() {
+// 	fmt.Println("  a b c d e f g h")
+// 	fmt.Println(" ┌─┬─┬─┬─┬─┬─┬─┬─┐")
+// 	for row := 7; row >= 0; row-- {
+// 		fmt.Printf("%d│", row+1)
+// 		for col := range 8 {
+// 			idx := row*8 + col
+// 			fmt.Printf("%s│", g.Board.GetPieceAtIndex(idx))
+// 		}
+// 		if row > 0 {
+// 			fmt.Println("\n │─┼─┼─┼─┼─┼─┼─┼─│")
+// 		}
+// 	}
+// 	fmt.Println("\n └─┴─┴─┴─┴─┴─┴─┴─┘")
+// 	fmt.Println("  a b c d e f g h")
+// }
 
 func (g *Game) IsLegalMove(move chess.Move) bool {
 	return slices.Contains(g.Board.LegalMoves, move)

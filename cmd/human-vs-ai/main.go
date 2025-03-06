@@ -31,7 +31,7 @@ func main() {
 	ebiten.SetWindowTitle("Go Chess")
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 
-	game.PrintBoard()
+	// game.PrintBoard()
 
 	if err := ebiten.RunGame(game); err != nil {
 		slog.Error("Failed to run game", "error", err)

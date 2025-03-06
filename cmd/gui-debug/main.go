@@ -25,11 +25,11 @@ func main() {
 
 	game := gui.NewGame(fenString)
 
-	ebiten.SetWindowSize(800, 800)
+	ebiten.SetWindowSize(1000, 1000)
 	ebiten.SetWindowTitle("Go Chess")
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 
-	game.PrintBoard()
+	// game.PrintBoard()
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal("Failed to run game, error: ", err)

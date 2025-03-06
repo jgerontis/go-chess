@@ -17,10 +17,19 @@ type AudioPlayer struct {
 
 // NewAudioPlayer initializes the audio system.
 func NewAudioPlayer(sampleRate int) *AudioPlayer {
-	return &AudioPlayer{
+	ap := &AudioPlayer{
 		context: audio.NewContext(sampleRate),
 		sounds:  make(map[string]*audio.Player),
 	}
+
+	ap.LoadSound("capture", "assets/sounds/capture.mp3")
+	ap.LoadSound("castle", "assets/sounds/castle.mp3")
+	ap.LoadSound("check", "assets/sounds/check.mp3")
+	ap.LoadSound("end", "assets/sounds/checkmate.mp3")
+	ap.LoadSound("move", "assets/sounds/move.mp3")
+	ap.LoadSound("promote", "assets/sounds/promote.mp3")
+
+	return ap
 }
 
 // LoadSound loads an MP3 file from disk and stores it in the map.

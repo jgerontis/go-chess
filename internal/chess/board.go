@@ -82,6 +82,8 @@ func (b *Board) MakeMove(move Move) {
 		b.Bitboards[enemyPiece].Clear(move.Target())
 		b.Bitboards[Piece(enemyPiece.Color())].Clear(move.Target())
 	}
+	// set the original piece on the target square
+	b.SetPieceAtIndex(piece, move.Target())
 	// change turns
 	b.WhiteToMove = !b.WhiteToMove
 }

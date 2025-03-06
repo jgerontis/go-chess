@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"os"
+	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -20,73 +21,70 @@ const (
 )
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	// write player turn in the top left
-	// if g.Board.WhiteToMove {
-	// 	turn = "White to move"
-	// } else {
-	// 	turn = "Black to move"
-	// }
-	legalMoves := ""
-	for _, move := range g.Board.LegalMoves {
-		legalMoves = legalMoves + move.String() + " "
-	}
-	ebitenutil.DebugPrint(screen, legalMoves)
-	margin := (WindowWidth - BoardSize) / 2
-	// draw the Background within the margins
-	opts := &ebiten.DrawImageOptions{}
-	opts.GeoM.Translate(float64(margin), float64(margin))
-	screen.DrawImage(g.Background, opts)
-	for rank := range 8 {
-		for file := range 8 {
-			// get the graphical coordinates of the square
-			x := margin + file*SquareSize
-			y := margin + (7-rank)*SquareSize
-			index := rank*8 + file
-
-			// check if the square is selected
-			squareSelected := g.Selected == index
-
-			// highlight selected square or the squares from the prior move
-			if squareSelected {
-				square := ebiten.NewImage(SquareSize, SquareSize)
-				squareColor := color.RGBA{255, 0, 0, 100}
-				square.Fill(squareColor)
-				squareOpts := &ebiten.DrawImageOptions{}
-				squareOpts.GeoM.Translate(float64(x), float64(y))
-				screen.DrawImage(square, squareOpts)
+	// get the legal targets for the selected piece
+	legalTargetsInts := []int{}
+	if g.Selected != -1 {
+		for _, move := range g.Board.LegalMoves {
+			if move.Source() == g.Selected {
+				legalTargetsInts = append(legalTargetsInts, move.Target())
 			}
-			if g.PrevMove != 0 {
-				source := g.PrevMove.Source()
-				target := g.PrevMove.Target()
-				if index == source || index == target {
-					square := ebiten.NewImage(SquareSize, SquareSize)
-					squareColor := color.RGBA{0, 255, 0, 100}
-					square.Fill(squareColor)
-					squareOpts := &ebiten.DrawImageOptions{}
-					squareOpts.GeoM.Translate(float64(x), float64(y))
-					screen.DrawImage(square, squareOpts)
-				}
-			}
-
-			// get the piece on the square, skip if there is no piece
-			piece := g.Board.GetPieceAtIndex(index)
-			if piece.IsNone() {
-				continue
-			}
-
-			// don't draw the piece in the square if it's being dragged
-			if squareSelected && g.Dragging {
-				continue
-			}
-
-			// draw the piece on the square
-			pieceImg := g.PieceImages[piece.FenChar()]
-			pieceOpts := &ebiten.DrawImageOptions{}
-			// if the piece is being dragged, move it with the mouse
-			pieceOpts.GeoM.Translate(float64(x), float64(y))
-			screen.DrawImage(pieceImg, pieceOpts)
 		}
 	}
+
+	// get the margin for math
+	margin := (WindowWidth - BoardSize) / 2
+
+	// draw the background
+	bgOpts := &ebiten.DrawImageOptions{}
+	bgOpts.GeoM.Translate(float64(margin), float64(margin))
+	screen.DrawImage(g.Background, bgOpts)
+
+	// we're going to make a bunch of tiles, then draw them on the screen
+
+	for index := range 64 {
+		tile := ebiten.NewImage(SquareSize, SquareSize)
+		tileOpts := &ebiten.DrawImageOptions{}
+
+		// red highlight selected piece
+		if g.Selected == index {
+			square, opts := makeSquare(color.RGBA{255, 0, 0, 200})
+			tile.DrawImage(square, opts)
+		}
+		// yellow highlight previous move
+		if g.PrevMove != 0 {
+			source := g.PrevMove.Source()
+			target := g.PrevMove.Target()
+			if index == source || index == target {
+				square, opts := makeSquare(color.RGBA{100, 100, 0, 100})
+				tile.DrawImage(square, opts)
+			}
+		}
+		// blue highlight legal targets
+		if g.Selected != -1 && len(legalTargetsInts) > 0 {
+			for _, targetIndex := range legalTargetsInts {
+				if index == targetIndex {
+					square, opts := makeSquare(color.RGBA{0, 0, 255, 100})
+					tile.DrawImage(square, opts)
+				}
+			}
+		}
+		// draw the piece on the square if it's not being dragged
+		if index != g.Selected || !g.Dragging {
+			piece := g.Board.GetPieceAtIndex(index)
+			if !piece.IsNone() {
+				pieceImg := g.PieceImages[piece.FenChar()]
+				pieceOpts := &ebiten.DrawImageOptions{}
+				tile.DrawImage(pieceImg, pieceOpts)
+			}
+		}
+		// draw the tile to the Background
+		x := (index%8)*SquareSize + margin
+		y := (7-index/8)*SquareSize + margin
+		tileOpts.GeoM.Translate(float64(x), float64(y))
+		screen.DrawImage(tile, tileOpts)
+	}
+
+	// draw the dragged piece
 	if g.Selected != -1 && g.Dragging {
 		x, y := ebiten.CursorPosition()
 		// adjust so we grab the middle of the piece, not the top left
@@ -104,8 +102,6 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return WindowWidth, WindowHeight
 }
 
-// loadSVG("assets/images/"+"bp"+".svg", SquareSize, SquareSize)
-
 func loadPieceImages() (map[string]*ebiten.Image, error) {
 	pieceImages := make(map[string]*ebiten.Image)
 	fenChars := []string{"p", "n", "b", "r", "q", "k", "P", "N", "B", "R", "Q", "K"}
@@ -118,6 +114,13 @@ func loadPieceImages() (map[string]*ebiten.Image, error) {
 		pieceImages[fenChar] = img
 	}
 	return pieceImages, nil
+}
+
+func makeSquare(c color.RGBA) (*ebiten.Image, *ebiten.DrawImageOptions) {
+	square := ebiten.NewImage(SquareSize, SquareSize)
+	square.Fill(c)
+	opts := &ebiten.DrawImageOptions{}
+	return square, opts
 }
 
 func loadSVG(path string, width, height int) (*ebiten.Image, error) {
@@ -167,21 +170,25 @@ func (g *Game) mouseCoordsToBoardCoords(x, y int) (int, int) {
 func generateBackground() (*ebiten.Image, error) {
 	// make a background image, and light and dark squares
 	background := ebiten.NewImage(BoardSize, BoardSize)
-	darkSquare := ebiten.NewImage(SquareSize, SquareSize)
-	darkSquare.Fill(color.RGBA{181, 136, 99, 255})
-	lightSquare := ebiten.NewImage(SquareSize, SquareSize)
-	lightSquare.Fill(color.RGBA{240, 217, 181, 255})
+	dark := color.RGBA{181, 136, 99, 255}
+	light := color.RGBA{240, 217, 181, 255}
 	// draw the squares to the background
 	for rank := range 8 {
 		for file := range 8 {
+			x := file * SquareSize
+			y := (7 - rank) * SquareSize
+			index := rank*8 + file
 			var square *ebiten.Image
+			var c color.RGBA
 			if (rank+file)%2 == 0 {
-				square = lightSquare
+				c = light
 			} else {
-				square = darkSquare
+				c = dark
 			}
-			opts := &ebiten.DrawImageOptions{}
-			opts.GeoM.Translate(float64(file*SquareSize), float64(rank*SquareSize))
+			square, opts := makeSquare(c)
+			opts.GeoM.Translate(float64(x), float64(y))
+			// add the index to the top left of the square for debugging
+			ebitenutil.DebugPrint(square, strconv.Itoa(index))
 			background.DrawImage(square, opts)
 		}
 	}
