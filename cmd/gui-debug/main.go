@@ -8,6 +8,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jgerontis/go-chess/gui"
+	"github.com/jgerontis/go-chess/internal/chess"
 )
 
 func main() {
@@ -20,7 +21,7 @@ func main() {
 		fenString = os.Args[1]
 	} else {
 		log.Println("No FEN string provided, starting with default position")
-		fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+		fenString = chess.START_FEN
 	}
 
 	game := gui.NewGame(fenString)
@@ -28,8 +29,10 @@ func main() {
 	ebiten.SetWindowSize(1000, 1000)
 	ebiten.SetWindowTitle("Go Chess")
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	ebiten.SetVsyncEnabled(true)
+	ebiten.SetTPS(160)
 
-	// game.PrintBoard()
+	// ebiten.SetScreenClearedEveryFrame(false)
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal("Failed to run game, error: ", err)

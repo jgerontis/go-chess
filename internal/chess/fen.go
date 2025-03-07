@@ -7,6 +7,8 @@ import (
 	"log"
 )
 
+const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
 /*
 	FEN (Forsyth-Edwards Notation) is a standard notation for describing a particular board position of a chess game.
 	https://www.chessprogramming.org/Forsyth-Edwards_Notation
@@ -37,7 +39,7 @@ func (b *Board) LoadFEN(fen string) {
 	// extra bitboards for convenience
 	b.Bitboards[Piece(WHITE)] = NewBitboard()
 	b.Bitboards[Piece(BLACK)] = NewBitboard()
-	// this one just in case we need it
+	// this one exists so that tests don't panic
 	b.Bitboards[Piece(NONE)] = NewBitboard()
 	// fill them out
 	for rank, row := range ranks {

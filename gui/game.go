@@ -19,6 +19,7 @@ type Game struct {
 	Player2     string
 	Selected    int
 	PrevMove    chess.Move
+	LegalTargets []int
 }
 
 func NewGame(FEN string) *Game {
@@ -90,18 +91,22 @@ func (g *Game) Update() error {
 			if g.IsLegalMove(moveAttempt) {
 				g.MakeMove(moveAttempt)
 				g.Selected = -1
+				g.UpdateLegalTargets()
 				return nil
 			}
 			// if it's an illegal move, unselect the piece
 			g.Selected = -1
+			g.UpdateLegalTargets()
 			return nil
 		// we clicked on an ally piece, select it
 		case piece.CanMove(g.Board.WhiteToMove):
 			g.Selected = hovIdx
+			g.UpdateLegalTargets()
 			return nil
 		// we clicked on an enemy piece, select it
 		case !piece.CanMove(g.Board.WhiteToMove):
 			g.Selected = hovIdx
+			g.UpdateLegalTargets()
 			return nil
 		}
 	}
@@ -114,6 +119,7 @@ func (g *Game) Update() error {
 			if g.IsLegalMove(moveAttempt) {
 				g.MakeMove(moveAttempt)
 				g.Selected = -1
+				g.UpdateLegalTargets()
 			}
 		}
 		g.Dragging = false
@@ -121,6 +127,18 @@ func (g *Game) Update() error {
 	return nil
 }
 
+func (g *Game) UpdateLegalTargets() {
+	// get the legal targets for the selected piece
+	legalTargetsInts := []int{}
+	if g.Selected != -1 {
+		for _, move := range g.Board.LegalMoves {
+			if move.Source() == g.Selected {
+				legalTargetsInts = append(legalTargetsInts, move.Target())
+			}
+		}
+	}
+	g.LegalTargets = legalTargetsInts
+}
 // func (g *Game) PrintBoard() {
 // 	fmt.Println("  a b c d e f g h")
 // 	fmt.Println(" ┌─┬─┬─┬─┬─┬─┬─┬─┐")

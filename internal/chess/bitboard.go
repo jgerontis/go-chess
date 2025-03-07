@@ -1,5 +1,7 @@
 package chess
 
+import "math/bits"
+
 type Bitboard uint64
 
 // a bitboard is a 64-bit integer where each bit represents a square on the board
@@ -13,6 +15,14 @@ const (
 	Rank3 Bitboard = 0x0000000000FF0000
 	Rank2 Bitboard = 0x000000000000FF00
 	Rank1 Bitboard = 0x00000000000000FF
+	FileH Bitboard = 0x8080808080808080 // 0x80 is the 8th bit set to 1
+	FileG Bitboard = 0x4040404040404040
+	FileF Bitboard = 0x2020202020202020
+	FileE Bitboard = 0x1010101010101010
+	FileD Bitboard = 0x0808080808080808
+	FileC Bitboard = 0x0404040404040404
+	FileB Bitboard = 0x0202020202020202
+	FileA Bitboard = 0x0101010101010101
 )
 
 func NewBitboard() *Bitboard {
@@ -34,19 +44,15 @@ func (b *Bitboard) Occupied(square int) bool {
 	return (*b & (1 << square)) != 0
 }
 
-// returns a bitboard shifted left relative to the original
-func (b Bitboard) SLeft(n int) Bitboard {
-	return b << n
+// get the least significant bit
+func (b *Bitboard) PopLSB() int {
+	lsb := b.BitScanForward()
+	b.Clear(lsb)
+	return lsb
 }
 
-// returns a bitboard shifted right relative to the original
-func (b Bitboard) SRight(n int) Bitboard {
-	return b >> n
-}
-
-// returns aa bitboard with the bits flipped compared to the original
-func (b Bitboard) Not() Bitboard {
-	return ^b
+func (b *Bitboard) BitScanForward() int {
+	return bits.TrailingZeros64(uint64(*b))
 }
 
 // print the bitboard (usually for debug)

@@ -6,7 +6,7 @@ import (
 
 func TestGetPieceAtIndex(t *testing.T) {
 	board := NewBoard()
-	board.LoadFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+	board.LoadFEN(START_FEN)
 	piece := board.GetPieceAtIndex(0)
 	if piece.IsNone() {
 		t.Fatalf("Got nil piece at index 0")

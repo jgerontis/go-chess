@@ -21,16 +21,6 @@ const (
 )
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	// get the legal targets for the selected piece
-	legalTargetsInts := []int{}
-	if g.Selected != -1 {
-		for _, move := range g.Board.LegalMoves {
-			if move.Source() == g.Selected {
-				legalTargetsInts = append(legalTargetsInts, move.Target())
-			}
-		}
-	}
-
 	// get the margin for math
 	margin := (WindowWidth - BoardSize) / 2
 
@@ -60,8 +50,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 		// blue highlight legal targets
-		if g.Selected != -1 && len(legalTargetsInts) > 0 {
-			for _, targetIndex := range legalTargetsInts {
+		if g.Selected != -1 && len(g.LegalTargets) > 0 {
+			for _, targetIndex := range g.LegalTargets {
 				if index == targetIndex {
 					square, opts := makeSquare(color.RGBA{0, 0, 255, 100})
 					tile.DrawImage(square, opts)
