@@ -1,5 +1,7 @@
 package chess
 
+//
+
 // gets all legal pawn moves for the current position
 func (b *Board) GeneratePawnMoves() []Move {
 	if b.WhiteToMove {
@@ -145,9 +147,54 @@ func (b *Board) GenerateBlackPawnMoves() []Move {
 }
 
 // gets all knight moves for the current position
-func (b *Board) GenerateKnightMoves() []Move {
-	return nil
-}
+// func (b *Board) GenerateKnightMoves() []Move {
+// 	if b.WhiteToMove {
+// 		return b.GenerateWhiteKnightMoves()
+// 	}
+// 	return b.GenerateBlackKnightMoves()
+// }
+
+// func (b *Board) GenerateWhiteKnightMoves() []Move {
+// 	whiteKnight := b.Bitboards[Piece(WHITE|KNIGHT)]
+// 	blackPieces := *b.Bitboards[Piece(BLACK)]
+// 	moves := make([]Move, 0)
+
+// 	for whiteKnight != 0 {
+// 		fromSquare := whiteKnight.PopLSB()
+// 		knightMoves := KnightMoves[fromSquare] & ^*b.Bitboards[Piece(WHITE)]
+
+// 		for knightMoves != 0 {
+// 			toSquare := knightMoves.PopLSB()
+// 			if (1<<toSquare)&blackPieces != 0 {
+// 				moves = append(moves, NewMove(fromSquare, toSquare, CaptureFlag))
+// 			} else {
+// 				moves = append(moves, NewMove(fromSquare, toSquare, 0))
+// 			}
+// 		}
+// 	}
+// 	return moves
+// }
+
+// func (b *Board) GenerateBlackKnightMoves() []Move {
+// 	blackKnight := b.Bitboards[Piece(BLACK|KNIGHT)]
+// 	whitePieces := *b.Bitboards[Piece(WHITE)]
+// 	moves := make([]Move, 0)
+
+// 	for blackKnight != 0 {
+// 		fromSquare := blackKnight.PopLSB()
+// 		knightMoves := KnightMoves[fromSquare] & ^*b.Bitboards[Piece(BLACK)]
+
+// 		for knightMoves != 0 {
+// 			toSquare := knightMoves.PopLSB()
+// 			if (1<<toSquare)&whitePieces != 0 {
+// 				moves = append(moves, NewMove(fromSquare, toSquare, CaptureFlag))
+// 			} else {
+// 				moves = append(moves, NewMove(fromSquare, toSquare, 0))
+// 			}
+// 		}
+// 	}
+// 	return moves
+// }
 
 // gets all bishop moves for the current position
 func (b *Board) GenerateBishopMoves() []Move {

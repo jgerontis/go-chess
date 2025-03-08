@@ -108,7 +108,12 @@ func (b *Board) LoadFEN(fen string) {
 		}
 	}
 	// fourth is en passant target square e.g. "e3" or '-' if none
-	b.EnPassantSquare = parts[3]
+	enPassantSquare := parts[3]
+	if enPassantSquare == "-" {
+		b.EnPassantSquare = 0
+	} else {
+		b.EnPassantSquare = StringToSquare(enPassantSquare)
+	}
 
 	// fifth is halfmove clock, number of halfmoves since the last pawn move or capture
 	halfMoves, err := strconv.Atoi(parts[4])
@@ -167,7 +172,11 @@ func (b *Board) ExportFEN() string {
 	}
 	FEN += " "
 	// fourth is en passant target square e.g. "e3" or '-' if none
-	FEN += b.EnPassantSquare
+	if b.EnPassantSquare == 0 {
+		FEN += "-"
+	} else {
+		FEN += SquareToString(b.EnPassantSquare)
+	}
 	FEN += " "
 	// fifth is halfmove clock, number of halfmoves since the last pawn move or capture
 	FEN += strconv.Itoa(b.HalfMoves)

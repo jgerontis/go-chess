@@ -5,7 +5,7 @@ type Board struct {
 	Bitboards map[Piece]*Bitboard
 
 	// other board state info, used by FEN
-	EnPassantSquare   string
+	EnPassantSquare   int
 	HalfMoves         int
 	FullMoves         int
 	BlackCastleRights string
