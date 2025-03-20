@@ -23,6 +23,11 @@ func NewBoard() *Board {
 // get legal moves for the current position
 func (b *Board) GenerateLegalMoves() {
 	b.LegalMoves = b.GeneratePawnMoves()
+	b.LegalMoves = append(b.LegalMoves, b.GenerateKnightMoves()...)
+	b.LegalMoves = append(b.LegalMoves, b.GenerateBishopMoves()...)
+	b.LegalMoves = append(b.LegalMoves, b.GenerateRookMoves()...)
+	b.LegalMoves = append(b.LegalMoves, b.GenerateQueenMoves()...)
+	b.LegalMoves = append(b.LegalMoves, b.GenerateKingMoves()...)
 }
 
 // sets a piece in relevant bitboards at the given index

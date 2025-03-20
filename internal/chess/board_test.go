@@ -70,4 +70,19 @@ func TestSetPieceAtIndex(t *testing.T) {
 	if !occupied {
 		t.Errorf("Expected square 0 to be occupied")
 	}
+	occupied = board.Bitboards[Piece(WHITE)].Occupied(0)
+	if !occupied {
+		t.Errorf("Expected square 0 to be occupied")
+	}
+}
+
+func TestBitboardInitialization(t *testing.T) {
+	board := NewBoard()
+	board.LoadFEN(START_FEN)
+	// check that all bitboards are initialized
+	for _, bb := range board.Bitboards {
+		if bb == nil {
+			t.Fatalf("Expected bitboard to be initialized")
+		}
+	}
 }

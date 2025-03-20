@@ -1,11 +1,15 @@
 package chess
 
-import "math/bits"
+import (
+	"fmt"
+	"math/bits"
+)
 
 type Bitboard uint64
 
 // a bitboard is a 64-bit integer where each bit represents a square on the board
 // a 1 in the nth bit means there is a piece of that type on that square
+// https://www.chessprogramming.org/Bitboards
 const (
 	Rank8 Bitboard = 0xFF00000000000000 // 0xFF is the leading 8 bits set to 1
 	Rank7 Bitboard = 0x00FF000000000000
@@ -55,17 +59,18 @@ func (b *Bitboard) BitScanForward() int {
 	return bits.TrailingZeros64(uint64(*b))
 }
 
-// print the bitboard (usually for debug)
+// print the bitboard as an 8x8 grid with the lsb in the bottom left
 func (b Bitboard) Print() {
-	for i := range 64 {
-		if i%8 == 0 {
-			println()
+	for rank := 7; rank >= 0; rank-- { // Start from rank 7 (top) down to rank 0 (bottom)
+		for file := 0; file < 8; file++ { // File moves left to right
+			square := rank*8 + file // Convert (rank, file) to bit index
+			if (b & (1 << square)) != 0 {
+				fmt.Print("1 ")
+			} else {
+				fmt.Print(". ")
+			}
 		}
-		if b&(1<<i) != 0 {
-			print("1")
-		} else {
-			print("0")
-		}
+		fmt.Println() // Newline after each rank
 	}
-	println()
+	fmt.Println()
 }
