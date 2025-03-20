@@ -1,4 +1,4 @@
-# GO Chess
+# Go Chess
 
 ## Why?
 
@@ -10,20 +10,55 @@ Also, I haven't worked as much in Go lately as I would like, so I thought this w
 
 For now, you can run it with `go run ./cmd/debug {optional FEN string goes here}`
 
-## Progress report:
+## Structure:
+This project is more or less split into three parts:
+1. The GUI that that will be used to play the game
+2. The internal chess logic to be used by the engine and the GUI
+3. The chess engine that will be used to play against the player
 
+
+## GUI:
 ### Done:
+- Basic board rendering
+- Basic piece rendering
+- Basic piece movement
+- Basic piece selection
+- Basic piece deselection
+- Basic piece capture
 
+### Todo:
+- Piece promotion
+- Castling
+- En passant
+- Check and checkmate detection
+- Stalemate detection
+- Draw by repetition detection
+- Draw by insufficient material detection
+- Draw by 50-move rule detection
+- Sound effects
+- UCI protocol
+- Animations (maybe)
+- Themes (maybe)
+- Multiplayer (maybe)
+
+## Chess logic:
+### Done:
 - Board representation
+- Piece representation
+- Move representation
+- Bitboards
 - Basic FEN parsing to load a board state
+- Full FEN parsing
+- Full FEN generation
 - Basic piece moving
 - Turn order
+- Pseudo-legal move calculation with Bitboards 🙌🙌
+- Psuedo-legal move calculation with magic bitboards 🧙‍♂️
 
-### To do:
 
-- Legal move calculation
-- Restricting moves based on legal moves
+#### To do:
 - Checks and checkmates
+- Pins
 - Castling
 - En passant
 - Pawn promotion
@@ -32,13 +67,11 @@ For now, you can run it with `go run ./cmd/debug {optional FEN string goes here}
 - Draw by insufficient material
 - Draw by 50-move rule
 - Draw by 3-fold repetition
-- Full FEN parsing
-- Full FEN generation
+
 
 ## Making the chess AI:
 
-(I let Co-Pilot fill this section out for me)
-
+Todo:
 - Board evaluation
 - Minimax algorithm
 - Alpha-beta pruning
@@ -64,4 +97,3 @@ For now, you can run it with `go run ./cmd/debug {optional FEN string goes here}
 
 - PGN parsing
 - PGN generation
-- UCI protocol
