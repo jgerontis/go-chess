@@ -36,6 +36,11 @@ func (b *Board) SetPieceAtIndex(piece Piece, index int) {
 	b.Bitboards[Piece(piece.Color())].Set(index)
 }
 
+func (b *Board) ClearPieceAtIndex(piece Piece, index int) {
+	b.Bitboards[piece].Clear(index)
+	b.Bitboards[Piece(piece.Color())].Clear(index)
+}
+
 // get the piece at a given square
 func (b *Board) GetPieceAtIndex(square int) Piece {
 	switch {
@@ -79,13 +84,11 @@ func (b *Board) MakeMove(move Move) {
 	// get the original piece
 	piece := b.GetPieceAtIndex(move.Source())
 	// clear the source square from the piece's board and the color board
-	b.Bitboards[piece].Clear(move.Source())
-	b.Bitboards[Piece(piece.Color())].Clear(move.Source())
+	b.ClearPieceAtIndex(piece, move.Source())
 	// update relevant enemy bitboards if it was a capture
 	enemyPiece := b.GetPieceAtIndex(move.Target())
 	if !enemyPiece.IsNone() {
-		b.Bitboards[enemyPiece].Clear(move.Target())
-		b.Bitboards[Piece(enemyPiece.Color())].Clear(move.Target())
+		b.ClearPieceAtIndex(enemyPiece, move.Target())
 	}
 	// set the original piece on the target square
 	b.SetPieceAtIndex(piece, move.Target())

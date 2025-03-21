@@ -1,7 +1,6 @@
 package chess
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -229,11 +228,7 @@ func (b *Board) GenerateRookMovesAtPos(pos int) []Move {
 	}
 	// get the blockers for the rook mask at the given position
 	allPieces := *b.Bitboards[Piece(WHITE)] | *b.Bitboards[Piece(BLACK)]
-	fmt.Println("===== ", pos, " =====")
-	allPieces.Print()
 	occ := allPieces & RookMasks[pos]
-	fmt.Println("rook masks")
-	occ.Print()
 	occ *= RookMagics[pos]
 	occ >>= (64 - RookShifts[pos])
 	// get the legal moves for the rook at the given position
@@ -281,6 +276,9 @@ func (b *Board) GenerateBishopMoves() []Move {
 		colorToMove = BLACK
 	}
 	bishopBitboard := *b.Bitboards[Piece(colorToMove|BISHOP)]
+	if bishopBitboard == 0 {
+		return []Move{}
+	}
 	moves := make([]Move, 0)
 	for bishopBitboard != 0 {
 		fromSquare := bishopBitboard.PopLSB()
@@ -300,6 +298,9 @@ func (b *Board) GenerateRookMoves() []Move {
 		colorToMove = BLACK
 	}
 	rookBitboard := *b.Bitboards[Piece(colorToMove|ROOK)]
+	if rookBitboard == 0 {
+		return []Move{}
+	}
 	moves := make([]Move, 0)
 	for rookBitboard != 0 {
 		fromSquare := rookBitboard.PopLSB()
@@ -316,6 +317,9 @@ func (b *Board) GenerateQueenMoves() []Move {
 		queenBitboard = *b.Bitboards[Piece(WHITE|QUEEN)]
 	} else {
 		queenBitboard = *b.Bitboards[Piece(BLACK|QUEEN)]
+	}
+	if queenBitboard == 0 {
+		return []Move{}
 	}
 	queenPos := queenBitboard.PopLSB()
 	// queen moves are just the combination of bishop and rook moves
