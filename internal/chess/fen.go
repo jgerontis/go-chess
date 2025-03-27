@@ -23,24 +23,26 @@ func (b *Board) LoadFEN(fen string) {
 	// first part is the pieces on the board
 	ranks := strings.Split(parts[0], "/")
 	// initialize bitboards
-	b.Bitboards = make(map[Piece]*Bitboard)
-	b.Bitboards[Piece(WHITE|PAWN)] = NewBitboard()
-	b.Bitboards[Piece(WHITE|KNIGHT)] = NewBitboard()
-	b.Bitboards[Piece(WHITE|BISHOP)] = NewBitboard()
-	b.Bitboards[Piece(WHITE|ROOK)] = NewBitboard()
-	b.Bitboards[Piece(WHITE|QUEEN)] = NewBitboard()
-	b.Bitboards[Piece(WHITE|KING)] = NewBitboard()
-	b.Bitboards[Piece(BLACK|PAWN)] = NewBitboard()
-	b.Bitboards[Piece(BLACK|KNIGHT)] = NewBitboard()
-	b.Bitboards[Piece(BLACK|BISHOP)] = NewBitboard()
-	b.Bitboards[Piece(BLACK|ROOK)] = NewBitboard()
-	b.Bitboards[Piece(BLACK|QUEEN)] = NewBitboard()
-	b.Bitboards[Piece(BLACK|KING)] = NewBitboard()
+	b.Bitboards = make(map[byte]*Bitboard)
+	b.Bitboards[WHITE|PAWN] = NewBitboard()
+	b.Bitboards[WHITE|KNIGHT] = NewBitboard()
+	b.Bitboards[WHITE|BISHOP] = NewBitboard()
+	b.Bitboards[WHITE|ROOK] = NewBitboard()
+	b.Bitboards[WHITE|QUEEN] = NewBitboard()
+	b.Bitboards[WHITE|KING] = NewBitboard()
+	b.Bitboards[BLACK|PAWN] = NewBitboard()
+	b.Bitboards[BLACK|KNIGHT] = NewBitboard()
+	b.Bitboards[BLACK|BISHOP] = NewBitboard()
+	b.Bitboards[BLACK|ROOK] = NewBitboard()
+	b.Bitboards[BLACK|QUEEN] = NewBitboard()
+	b.Bitboards[BLACK|KING] = NewBitboard()
 	// extra bitboards for convenience
-	b.Bitboards[Piece(WHITE)] = NewBitboard()
-	b.Bitboards[Piece(BLACK)] = NewBitboard()
+	b.Bitboards[WHITE] = NewBitboard()
+	b.Bitboards[BLACK] = NewBitboard()
+	b.Bitboards[WHITE|ATTACK] = NewBitboard()
+	b.Bitboards[BLACK|ATTACK] = NewBitboard()
 	// this one exists so that tests don't panic
-	b.Bitboards[Piece(NONE)] = NewBitboard()
+	b.Bitboards[NONE] = NewBitboard()
 	// fill them out
 	for rank, row := range ranks {
 		file := 0

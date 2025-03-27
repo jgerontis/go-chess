@@ -61,16 +61,16 @@ func TestGetPieceAtIndex(t *testing.T) {
 
 func TestSetPieceAtIndex(t *testing.T) {
 	board := NewBoard()
-	wr := Piece(WHITE | ROOK)
-	board.Bitboards = make(map[Piece]*Bitboard)
+	wr := WHITE | ROOK
+	board.Bitboards = make(map[byte]*Bitboard)
 	board.Bitboards[wr] = NewBitboard()
-	board.Bitboards[Piece(WHITE)] = NewBitboard()
-	board.SetPieceAtIndex(wr, 0)
+	board.Bitboards[WHITE] = NewBitboard()
+	board.SetPieceAtIndex(Piece(wr), 0)
 	occupied := board.Bitboards[wr].Occupied(0)
 	if !occupied {
 		t.Errorf("Expected square 0 to be occupied")
 	}
-	occupied = board.Bitboards[Piece(WHITE)].Occupied(0)
+	occupied = board.Bitboards[WHITE].Occupied(0)
 	if !occupied {
 		t.Errorf("Expected square 0 to be occupied")
 	}

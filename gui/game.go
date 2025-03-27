@@ -1,8 +1,6 @@
 package gui
 
 import (
-	"slices"
-
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/jgerontis/go-chess/internal/chess"
@@ -10,15 +8,15 @@ import (
 
 // Game is going to manage the game state and interface with ebitengine and the chess engine.
 type Game struct {
-	AudioPlayer *AudioPlayer
-	Background  *ebiten.Image
-	Board       *chess.Board
-	Dragging    bool
-	PieceImages map[string]*ebiten.Image
-	Player1     string
-	Player2     string
-	Selected    int
-	PrevMove    chess.Move
+	AudioPlayer  *AudioPlayer
+	Background   *ebiten.Image
+	Board        *chess.Board
+	Dragging     bool
+	PieceImages  map[string]*ebiten.Image
+	Player1      string
+	Player2      string
+	Selected     int
+	PrevMove     chess.Move
 	LegalTargets []int
 }
 
@@ -87,8 +85,15 @@ func (g *Game) Update() error {
 		case piece.IsNone() || (!piece.CanMove(g.Board.WhiteToMove) && g.Selected != -1):
 			// we're trying to make a move
 			moveAttempt := chess.NewMove(g.Selected, hovIdx, 0)
-			// if moveAttempt in legalmoves
-			if g.IsLegalMove(moveAttempt) {
+			moveOptions := g.BoardMoveToLegalMoves(moveAttempt)
+			if len(moveOptions) == 1 {
+				g.MakeMove(moveOptions[0])
+				g.Selected = -1
+				g.UpdateLegalTargets()
+				return nil
+			} else if len(moveOptions) > 1 {
+				// TODO interface for choosing promotion
+				moveAttempt = moveOptions[0]
 				g.MakeMove(moveAttempt)
 				g.Selected = -1
 				g.UpdateLegalTargets()
@@ -116,7 +121,14 @@ func (g *Game) Update() error {
 		if g.Dragging && hovIdx != g.Selected {
 			// we're trying to make a move
 			moveAttempt := chess.NewMove(g.Selected, hovIdx, 0)
-			if g.IsLegalMove(moveAttempt) {
+			moveOptions := g.BoardMoveToLegalMoves(moveAttempt)
+			if len(moveOptions) == 1 {
+				g.MakeMove(moveOptions[0])
+				g.Selected = -1
+				g.UpdateLegalTargets()
+			} else if len(moveOptions) > 1 {
+				// TODO: interface for choosing promotion
+				moveAttempt = moveOptions[0]
 				g.MakeMove(moveAttempt)
 				g.Selected = -1
 				g.UpdateLegalTargets()
@@ -139,6 +151,7 @@ func (g *Game) UpdateLegalTargets() {
 	}
 	g.LegalTargets = legalTargetsInts
 }
+
 // func (g *Game) PrintBoard() {
 // 	fmt.Println("  a b c d e f g h")
 // 	fmt.Println(" ┌─┬─┬─┬─┬─┬─┬─┬─┐")
@@ -156,6 +169,12 @@ func (g *Game) UpdateLegalTargets() {
 // 	fmt.Println("  a b c d e f g h")
 // }
 
-func (g *Game) IsLegalMove(move chess.Move) bool {
-	return slices.Contains(g.Board.LegalMoves, move)
+func (g *Game) BoardMoveToLegalMoves(moveAttempt chess.Move) []chess.Move {
+	legalMoves := []chess.Move{}
+	for _, move := range g.Board.LegalMoves {
+		if move.Source() == moveAttempt.Source() && move.Target() == moveAttempt.Target() {
+			legalMoves = append(legalMoves, move)
+		}
+	}
+	return legalMoves
 }

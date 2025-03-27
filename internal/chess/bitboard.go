@@ -48,11 +48,16 @@ func (b *Bitboard) Occupied(square int) bool {
 	return (*b & (1 << square)) != 0
 }
 
-// get the least significant bit
+// get the least significant bit and clear it
 func (b *Bitboard) PopLSB() int {
 	lsb := b.BitScanForward()
 	b.Clear(lsb)
 	return lsb
+}
+
+// get the least significant bit
+func (b *Bitboard) GetLSB() int {
+	return b.BitScanForward()
 }
 
 func (b *Bitboard) BitScanForward() int {

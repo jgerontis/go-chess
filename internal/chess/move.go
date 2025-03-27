@@ -10,14 +10,14 @@ type Move uint16
 
 // flag consts, luckily 3 bits is enough for us
 const (
-	NoFlag               = 0 // 000
-	EnPassantCaptureFlag = 1 // 001
-	CastleFlag           = 2 // 010
-	PawnMoveTwoFlag      = 3 // 011
-	PromoteToKnightFlag  = 4 // 100
-	PromoteToBishopFlag  = 5 // 101
-	PromoteToRookFlag    = 6 // 110
-	PromoteToQueenFlag   = 7 // 111
+	NO_FLAG             = 0 // 000
+	PAWN_DOUBLE_FLAG    = 1 // 011
+	EN_PASSANT_FLAG     = 2 // 001
+	CASTLE_FLAG         = 3 // 010
+	PROMOTE_KNIGHT_FLAG = 4 // 100
+	PROMOTE_BISHOP_FLAG = 5 // 101
+	PROMOTE_ROOK_FLAG   = 6 // 110
+	PROMOTE_QUEEN_FLAG  = 7 // 111
 )
 
 func NewMove(source, target, flag int) Move {

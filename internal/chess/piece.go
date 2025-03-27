@@ -15,6 +15,7 @@ const (
 	KING   byte = 6  // 00000110
 	BLACK  byte = 8  // 00001000
 	WHITE  byte = 16 // 00010000
+	ATTACK byte = 32 // 00100000
 )
 
 func (p Piece) Color() byte {
