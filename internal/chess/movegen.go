@@ -393,6 +393,113 @@ func (b *Board) GenerateKingMoves() []Move {
 	return b.FilterLegalMoves(moves)
 }
 
+// IsSquareAttacked checks if a square is attacked by the given color
+func (b *Board) IsSquareAttacked(square int, byColor byte) bool {
+	// Check for pawn attacks
+	if byColor == WHITE {
+		// White pawns attack diagonally upward (from white's perspective)
+		// So from the target square, we look diagonally downward for white pawns
+		if square >= 16 { // Make sure we don't go below rank 2
+			// Check diagonal down-left (from white pawn's perspective)
+			if square%8 != 0 && b.Bitboards[WHITE|PAWN].Occupied(square-9) {
+				return true
+			}
+			// Check diagonal down-right (from white pawn's perspective)
+			if square%8 != 7 && b.Bitboards[WHITE|PAWN].Occupied(square-7) {
+				return true
+			}
+		}
+	} else {
+		// Black pawns attack diagonally downward (from black's perspective)
+		// So from the target square, we look diagonally upward for black pawns
+		if square < 48 { // Make sure we don't go above rank 7
+			// Check diagonal up-left (from black pawn's perspective)
+			if square%8 != 7 && b.Bitboards[BLACK|PAWN].Occupied(square+7) {
+				return true
+			}
+			// Check diagonal up-right (from black pawn's perspective)
+			if square%8 != 0 && b.Bitboards[BLACK|PAWN].Occupied(square+9) {
+				return true
+			}
+		}
+	}
+
+	// Check for knight attacks
+	knightMoves := KnightMasks[square]
+	if (knightMoves & *b.Bitboards[byColor|KNIGHT]) != 0 {
+		return true
+	}
+
+	// Check for king attacks
+	kingMoves := KingMasks[square]
+	if (kingMoves & *b.Bitboards[byColor|KING]) != 0 {
+		return true
+	}
+
+	// Check for sliding piece attacks (rook, bishop, queen)
+	allPieces := *b.Bitboards[WHITE] | *b.Bitboards[BLACK]
+
+	// Check for rook/queen attacks (orthogonal)
+	rookMask := RookMasks[square]
+	blockers := allPieces & rookMask
+	rookAttacks := RookAttacks[square][(blockers*RookMagics[square])>>(64-RookShifts[square])]
+	if (rookAttacks & (*b.Bitboards[byColor|ROOK] | *b.Bitboards[byColor|QUEEN])) != 0 {
+		return true
+	}
+
+	// Check for bishop/queen attacks (diagonal)
+	bishopMask := BishopMasks[square]
+	blockers = allPieces & bishopMask
+	bishopAttacks := BishopAttacks[square][(blockers*BishopMagics[square])>>(64-BishopShifts[square])]
+	return (bishopAttacks & (*b.Bitboards[byColor|BISHOP] | *b.Bitboards[byColor|QUEEN])) != 0
+}
+
+// IsInCheck returns true if the specified color's king is in check
+func (b *Board) IsInCheck(color byte) bool {
+	// Find the king position
+	kingBitboard := *b.Bitboards[color|KING]
+	if kingBitboard == 0 {
+		return false // No king found
+	}
+
+	kingPos := kingBitboard.PopLSB()
+
+	// Restore the king position since PopLSB modifies the bitboard
+	b.Bitboards[color|KING].Set(kingPos)
+
+	// Check if the king's square is attacked by the opposite color
+	oppositeColor := WHITE
+	if color == WHITE {
+		oppositeColor = BLACK
+	}
+
+	return b.IsSquareAttacked(kingPos, oppositeColor)
+}
+
 func (b *Board) FilterLegalMoves(moves []Move) []Move {
-	return moves
+	legalMoves := make([]Move, 0)
+
+	// Determine which color is moving
+	var movingColor byte
+	if b.WhiteToMove {
+		movingColor = WHITE
+	} else {
+		movingColor = BLACK
+	}
+
+	for _, move := range moves {
+		// Make the move temporarily
+		state := b.MakeMove(move)
+
+		// Check if this move leaves our own king in check
+		// After making the move, it's the opponent's turn, so we check if our king is still safe
+		if !b.IsInCheck(movingColor) {
+			legalMoves = append(legalMoves, move)
+		}
+
+		// Unmake the move to restore the board state
+		b.UnmakeMove(move, state)
+	}
+
+	return legalMoves
 }

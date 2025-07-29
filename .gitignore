@@ -1,1 +1,12 @@
+# Stockfish, it's not my code duh, just using it for reference and to play against
 stockfish/*
+
+# Binaries
+*.exe
+
+# IDE and Agent Stuff
+.DS_Store
+.claude
+CLAUDE.md
+.vscode/
+*.code-workspace

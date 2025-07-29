@@ -1,7 +1,5 @@
 package chess
 
-import "fmt"
-
 type Board struct {
 	// bitboards for each piece type
 	Bitboards map[byte]*Bitboard
@@ -75,23 +73,29 @@ func (b *Board) GetPieceAtIndex(square int) Piece {
 	}
 }
 
-// updates the board state from a Move object
-func (b *Board) MakeMove(move Move) {
+// updates the board state from a Move object and returns the previous state
+func (b *Board) MakeMove(move Move) BoardState {
+	// Save the current state before making changes
+	state := b.SaveState()
+
+	// get the original piece
+	piece := b.GetPieceAtIndex(move.Source())
+	// update relevant enemy bitboards if it was a capture
+	enemyPiece := b.GetPieceAtIndex(move.Target())
+	state.CapturedPiece = enemyPiece // Save captured piece for unmake
+	if !enemyPiece.IsNone() {
+		b.ClearPieceAtIndex(enemyPiece, move.Target())
+	}
+
 	// increment move counter
 	b.HalfMoves++
 	// increment full move counter on black moves
 	if !b.WhiteToMove {
 		b.FullMoves++
 	}
-	// get the original piece
-	piece := b.GetPieceAtIndex(move.Source())
+
 	// clear the source square from the piece's board and the color board
 	b.ClearPieceAtIndex(piece, move.Source())
-	// update relevant enemy bitboards if it was a capture
-	enemyPiece := b.GetPieceAtIndex(move.Target())
-	if !enemyPiece.IsNone() {
-		b.ClearPieceAtIndex(enemyPiece, move.Target())
-	}
 	// set the original piece on the target square
 	b.SetPieceAtIndex(piece, move.Target())
 
@@ -119,32 +123,25 @@ func (b *Board) MakeMove(move Move) {
 				b.SetPieceAtIndex(Piece(ROOK|BLACK), 59)
 			}
 		}
-		break
 	case PROMOTE_KNIGHT_FLAG:
 		b.ClearPieceAtIndex(piece, move.Target())
 		b.SetPieceAtIndex(Piece(KNIGHT|piece.Color()), move.Target())
-		break
 	case PROMOTE_BISHOP_FLAG:
 		b.ClearPieceAtIndex(piece, move.Target())
 		b.SetPieceAtIndex(Piece(BISHOP|piece.Color()), move.Target())
-		break
 	case PROMOTE_ROOK_FLAG:
 		b.ClearPieceAtIndex(piece, move.Target())
 		b.SetPieceAtIndex(Piece(ROOK|piece.Color()), move.Target())
-		break
 	case PROMOTE_QUEEN_FLAG:
 		b.ClearPieceAtIndex(piece, move.Target())
 		b.SetPieceAtIndex(Piece(QUEEN|piece.Color()), move.Target())
-		break
 	case EN_PASSANT_FLAG:
 		// clear the captured pawn
-		if b.WhiteToMove {
-			fmt.Println("clearing piece at index")
+		if state.WhiteToMove { // Use the original turn state
 			b.ClearPieceAtIndex(Piece(PAWN|BLACK), move.Target()-8)
 		} else {
 			b.ClearPieceAtIndex(Piece(PAWN|WHITE), move.Target()+8)
 		}
-		break
 	case PAWN_DOUBLE_FLAG:
 		break
 	default:
@@ -153,7 +150,7 @@ func (b *Board) MakeMove(move Move) {
 
 	// set the en passant square if it was a double pawn move
 	if move.Flag() == PAWN_DOUBLE_FLAG {
-		if b.WhiteToMove {
+		if state.WhiteToMove { // Use the original turn state
 			b.EnPassantSquare = move.Target() - 8
 		} else {
 			b.EnPassantSquare = move.Target() + 8
@@ -164,4 +161,91 @@ func (b *Board) MakeMove(move Move) {
 
 	// change turns
 	b.WhiteToMove = !b.WhiteToMove
+
+	return state
+}
+
+// BoardState represents the board state that needs to be restored when unmaking a move
+type BoardState struct {
+	WhiteToMove       bool
+	EnPassantSquare   int
+	HalfMoves         int
+	FullMoves         int
+	BlackCastleRights string
+	WhiteCastleRights string
+	CapturedPiece     Piece
+}
+
+// SaveState saves the current board state before making a move
+func (b *Board) SaveState() BoardState {
+	return BoardState{
+		WhiteToMove:       b.WhiteToMove,
+		EnPassantSquare:   b.EnPassantSquare,
+		HalfMoves:         b.HalfMoves,
+		FullMoves:         b.FullMoves,
+		BlackCastleRights: b.BlackCastleRights,
+		WhiteCastleRights: b.WhiteCastleRights,
+	}
+}
+
+// RestoreState restores the board state after unmaking a move
+func (b *Board) RestoreState(state BoardState) {
+	b.WhiteToMove = state.WhiteToMove
+	b.EnPassantSquare = state.EnPassantSquare
+	b.HalfMoves = state.HalfMoves
+	b.FullMoves = state.FullMoves
+	b.BlackCastleRights = state.BlackCastleRights
+	b.WhiteCastleRights = state.WhiteCastleRights
+}
+
+// UnmakeMove reverses a move that was previously made
+func (b *Board) UnmakeMove(move Move, state BoardState) {
+	// Get the piece that was moved (now at target square)
+	piece := b.GetPieceAtIndex(move.Target())
+
+	// Handle special moves first
+	switch move.Flag() {
+	case CASTLE_FLAG:
+		// Undo castling - move king back and rook back
+		if !state.WhiteToMove { // Was white's move
+			if move.Target() == 6 { // Kingside
+				b.ClearPieceAtIndex(Piece(ROOK|WHITE), 5)
+				b.SetPieceAtIndex(Piece(ROOK|WHITE), 7)
+			} else { // Queenside
+				b.ClearPieceAtIndex(Piece(ROOK|WHITE), 3)
+				b.SetPieceAtIndex(Piece(ROOK|WHITE), 0)
+			}
+		} else { // Was black's move
+			if move.Target() == 62 { // Kingside
+				b.ClearPieceAtIndex(Piece(ROOK|BLACK), 61)
+				b.SetPieceAtIndex(Piece(ROOK|BLACK), 63)
+			} else { // Queenside
+				b.ClearPieceAtIndex(Piece(ROOK|BLACK), 59)
+				b.SetPieceAtIndex(Piece(ROOK|BLACK), 56)
+			}
+		}
+	case PROMOTE_KNIGHT_FLAG, PROMOTE_BISHOP_FLAG, PROMOTE_ROOK_FLAG, PROMOTE_QUEEN_FLAG:
+		// Clear the promoted piece and restore the original pawn
+		b.ClearPieceAtIndex(piece, move.Target())
+		piece = Piece(PAWN | piece.Color())
+	case EN_PASSANT_FLAG:
+		// Restore the captured pawn
+		if state.WhiteToMove { // Was white's move
+			b.SetPieceAtIndex(Piece(PAWN|BLACK), move.Target()-8)
+		} else { // Was black's move
+			b.SetPieceAtIndex(Piece(PAWN|WHITE), move.Target()+8)
+		}
+	}
+
+	// Move the piece back to its original square
+	b.ClearPieceAtIndex(piece, move.Target())
+	b.SetPieceAtIndex(piece, move.Source())
+
+	// Restore captured piece if there was one
+	if !state.CapturedPiece.IsNone() {
+		b.SetPieceAtIndex(state.CapturedPiece, move.Target())
+	}
+
+	// Restore the board state
+	b.RestoreState(state)
 }

@@ -46,7 +46,7 @@ func NewGame(FEN string) *Game {
 }
 
 func (g *Game) MakeMove(move chess.Move) {
-	g.Board.MakeMove(move)
+	_ = g.Board.MakeMove(move) // Ignore the return value for now
 	// play a sound
 	// g.AudioPlayer.PlaySound("move")
 	g.PrevMove = move
