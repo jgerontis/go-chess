@@ -302,3 +302,204 @@ func TestEnPassant(t *testing.T) {
 		}
 	}
 }
+
+func TestCastling(t *testing.T) {
+	board := NewBoard()
+	
+	// Test white kingside castling
+	board.LoadFEN("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 0 1")
+	
+	kingMoves := board.GenerateKingMoves()
+	var kingsideCastle Move
+	var queensideCastle Move
+	foundKingside := false
+	foundQueenside := false
+	
+	for _, move := range kingMoves {
+		if move.Flag() == CASTLE_FLAG {
+			if move.Target() == 6 { // g1
+				kingsideCastle = move
+				foundKingside = true
+			} else if move.Target() == 2 { // c1
+				queensideCastle = move
+				foundQueenside = true
+			}
+		}
+	}
+	
+	if !foundKingside {
+		t.Error("Should find white kingside castle")
+	}
+	if !foundQueenside {
+		t.Error("Should find white queenside castle")
+	}
+	
+	// Test making kingside castle
+	state := board.MakeMove(kingsideCastle)
+	
+	// Also test that we found queenside castle (just to use the variable)
+	_ = queensideCastle
+	
+	// King should be on g1
+	king := board.GetPieceAtIndex(6) // g1
+	if king.Type() != KING || king.Color() != WHITE {
+		t.Error("King should be on g1 after kingside castle")
+	}
+	
+	// Rook should be on f1
+	rook := board.GetPieceAtIndex(5) // f1
+	if rook.Type() != ROOK || rook.Color() != WHITE {
+		t.Error("Rook should be on f1 after kingside castle")
+	}
+	
+	// e1 and h1 should be empty
+	if !board.GetPieceAtIndex(4).IsNone() { // e1
+		t.Error("e1 should be empty after castle")
+	}
+	if !board.GetPieceAtIndex(7).IsNone() { // h1
+		t.Error("h1 should be empty after castle")
+	}
+	
+	// Test unmaking the castle
+	board.UnmakeMove(kingsideCastle, state)
+	
+	// King should be back on e1
+	king = board.GetPieceAtIndex(4) // e1
+	if king.Type() != KING || king.Color() != WHITE {
+		t.Error("King should be back on e1 after unmake")
+	}
+	
+	// Rook should be back on h1
+	rook = board.GetPieceAtIndex(7) // h1
+	if rook.Type() != ROOK || rook.Color() != WHITE {
+		t.Error("Rook should be back on h1 after unmake")
+	}
+	
+	// f1 and g1 should be empty
+	if !board.GetPieceAtIndex(5).IsNone() { // f1
+		t.Error("f1 should be empty after unmake")
+	}
+	if !board.GetPieceAtIndex(6).IsNone() { // g1
+		t.Error("g1 should be empty after unmake")
+	}
+}
+
+func TestPromotion(t *testing.T) {
+	board := NewBoard()
+	
+	// Test white pawn promotion
+	board.LoadFEN("8/P7/8/8/8/8/8/8 w - - 0 1")
+	
+	pawnMoves := board.GeneratePawnMoves()
+	if len(pawnMoves) != 4 {
+		t.Errorf("Expected 4 promotion moves, got %d", len(pawnMoves))
+	}
+	
+	// Test queen promotion
+	var queenPromotion Move
+	for _, move := range pawnMoves {
+		if move.Flag() == PROMOTE_QUEEN_FLAG {
+			queenPromotion = move
+			break
+		}
+	}
+	
+	state := board.MakeMove(queenPromotion)
+	
+	// Should have a white queen on a8
+	piece := board.GetPieceAtIndex(56) // a8
+	if piece.Type() != QUEEN || piece.Color() != WHITE {
+		t.Error("Should have white queen on a8 after promotion")
+	}
+	
+	// a7 should be empty
+	if !board.GetPieceAtIndex(48).IsNone() { // a7
+		t.Error("a7 should be empty after promotion")
+	}
+	
+	// Test unmaking promotion
+	board.UnmakeMove(queenPromotion, state)
+	
+	// Should have white pawn back on a7
+	piece = board.GetPieceAtIndex(48) // a7
+	if piece.Type() != PAWN || piece.Color() != WHITE {
+		t.Error("Should have white pawn back on a7 after unmake")
+	}
+	
+	// a8 should be empty
+	if !board.GetPieceAtIndex(56).IsNone() { // a8
+		t.Error("a8 should be empty after unmake")
+	}
+}
+
+func TestMoveUnmakeConsistency(t *testing.T) {
+	board := NewBoard()
+	board.LoadFEN(START_FEN)
+	
+	// Generate all legal moves
+	board.GenerateLegalMoves()
+	
+	// Test that make/unmake is consistent for all moves
+	for _, move := range board.LegalMoves {
+		// Save the original FEN
+		originalFEN := board.ExportFEN()
+		
+		// Make the move
+		state := board.MakeMove(move)
+		
+		// Unmake the move
+		board.UnmakeMove(move, state)
+		
+		// Board should be identical to original
+		restoredFEN := board.ExportFEN()
+		if originalFEN != restoredFEN {
+			t.Errorf("Make/unmake inconsistency for move %s:\nOriginal: %s\nRestored: %s", 
+				move.String(), originalFEN, restoredFEN)
+		}
+	}
+}
+
+func TestCaptureRestoration(t *testing.T) {
+	board := NewBoard()
+	
+	// Position with possible captures
+	board.LoadFEN("rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1")
+	
+	// White pawn can capture black pawn
+	captureMove := NewMove(28, 35, 0) // e4 captures d5
+	
+	// Verify there's a black pawn on d5
+	capturedPiece := board.GetPieceAtIndex(35)
+	if capturedPiece.Type() != PAWN || capturedPiece.Color() != BLACK {
+		t.Error("Expected black pawn on d5")
+	}
+	
+	// Make the capture
+	state := board.MakeMove(captureMove)
+	
+	// d5 should now have white pawn
+	piece := board.GetPieceAtIndex(35)
+	if piece.Type() != PAWN || piece.Color() != WHITE {
+		t.Error("Expected white pawn on d5 after capture")
+	}
+	
+	// e4 should be empty
+	if !board.GetPieceAtIndex(28).IsNone() {
+		t.Error("e4 should be empty after move")
+	}
+	
+	// Unmake the move
+	board.UnmakeMove(captureMove, state)
+	
+	// Black pawn should be restored on d5
+	piece = board.GetPieceAtIndex(35)
+	if piece.Type() != PAWN || piece.Color() != BLACK {
+		t.Error("Black pawn should be restored on d5")
+	}
+	
+	// White pawn should be back on e4
+	piece = board.GetPieceAtIndex(28)
+	if piece.Type() != PAWN || piece.Color() != WHITE {
+		t.Error("White pawn should be back on e4")
+	}
+}

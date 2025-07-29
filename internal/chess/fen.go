@@ -91,11 +91,11 @@ func (b *Board) LoadFEN(fen string) {
 
 	// third is castling rights, capital letters for white, lowercase for black, '-' for none
 	// i.e. KQk for white kingside and queenside, black kingside
+	b.WhiteCastleRights = ""
+	b.BlackCastleRights = ""
+
 	castleRights := parts[2]
-	if castleRights == "-" {
-		b.WhiteCastleRights = ""
-		b.BlackCastleRights = ""
-	} else {
+	if castleRights != "-" {
 		for _, char := range castleRights {
 			switch char {
 			case 'K':
@@ -112,7 +112,7 @@ func (b *Board) LoadFEN(fen string) {
 	// fourth is en passant target square e.g. "e3" or '-' if none
 	enPassantSquare := parts[3]
 	if enPassantSquare == "-" {
-		b.EnPassantSquare = 0
+		b.EnPassantSquare = -1 // No en passant target square
 	} else {
 		b.EnPassantSquare = StringToSquare(enPassantSquare)
 	}
@@ -174,7 +174,7 @@ func (b *Board) ExportFEN() string {
 	}
 	FEN += " "
 	// fourth is en passant target square e.g. "e3" or '-' if none
-	if b.EnPassantSquare == 0 {
+	if b.EnPassantSquare == -1 {
 		FEN += "-"
 	} else {
 		FEN += SquareToString(b.EnPassantSquare)
