@@ -207,7 +207,7 @@ func (b *Board) UnmakeMove(move Move, state BoardState) {
 	switch move.Flag() {
 	case CASTLE_FLAG:
 		// Undo castling - move king back and rook back
-		if !state.WhiteToMove { // Was white's move
+		if state.WhiteToMove { // Was white's move
 			if move.Target() == 6 { // Kingside
 				b.ClearPieceAtIndex(Piece(ROOK|WHITE), 5)
 				b.SetPieceAtIndex(Piece(ROOK|WHITE), 7)

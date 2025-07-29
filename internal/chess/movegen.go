@@ -262,7 +262,7 @@ func (b *Board) GenerateRookMovesAtPos(pos int) []Move {
 		// add the move to the moves slice
 		moves = append(moves, NewMove(pos, toSquare, 0))
 	}
-	return b.FilterLegalMoves(moves)
+	return moves
 }
 
 // gets all diagonal moves for a piece at the given index
@@ -286,7 +286,7 @@ func (b *Board) GenerateBishopMovesAtPos(pos int) []Move {
 		// add the move to the moves slice
 		moves = append(moves, NewMove(pos, toSquare, 0))
 	}
-	return b.FilterLegalMoves(moves)
+	return moves
 }
 
 // gets all bishop moves for the current position
@@ -462,10 +462,8 @@ func (b *Board) IsInCheck(color byte) bool {
 		return false // No king found
 	}
 
-	kingPos := kingBitboard.PopLSB()
-
-	// Restore the king position since PopLSB modifies the bitboard
-	b.Bitboards[color|KING].Set(kingPos)
+	// Use GetLSB instead of PopLSB to avoid modifying the bitboard
+	kingPos := kingBitboard.GetLSB()
 
 	// Check if the king's square is attacked by the opposite color
 	oppositeColor := WHITE
