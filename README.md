@@ -30,18 +30,26 @@ git clone https://github.com/jgerontis/go-chess.git
 cd go-chess
 
 # Run the main GUI (starts with menu)
-go run ./cmd/gui-debug
+go run ./cmd/main
 
 # Or skip directly to specific modes
-go run ./cmd/gui-debug --debug           # Manual piece movement
-go run ./cmd/gui-debug --human-vs-ai     # Play against AI
-go run ./cmd/gui-debug --ai-vs-ai        # Watch AI vs AI
-go run ./cmd/engine-cli                  # UCI engine interface
+go run ./cmd/main --debug           # Manual piece movement
+go run ./cmd/main --human-vs-ai     # Play against AI
+go run ./cmd/main --ai-vs-ai        # Watch AI vs AI
+
+# UCI Client for engine communication  
+go run ./cmd/engine-cli tcp localhost:8080    # Connect to TCP server
+go run ./cmd/engine-cli exec stockfish        # Launch Stockfish
+go run ./cmd/engine-cli exec ./my-engine      # Launch your custom engine
+
+# GoChess Engine (standalone UCI engine)
+go build -o my-engine ./cmd/engine            # Build your engine
+go run ./cmd/engine-cli exec ./my-engine      # Test your engine
 
 # Run with custom position
-go run ./cmd/gui-debug --fen "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
+go run ./cmd/main --fen "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
 # Legacy format still supported
-go run ./cmd/gui-debug "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
+go run ./cmd/main "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
 ```
 
 ### Development Commands
@@ -69,7 +77,8 @@ go build ./cmd/...
 - FEN parsing and board representation
 - GUI with main menu and game mode selection
 - Command line argument parsing and navigation
-- UCI protocol foundation
+- UCI client library with TCP and process communication
+- Shared UCI layer for engine integration
 
 ### 🚧 **In Progress**
 - Checkmate and stalemate detection
@@ -105,21 +114,37 @@ go build ./cmd/...
 
 ```
 ├── cmd/                    # Executable entry points
-│   ├── main/         # Main GUI with menu system and all game modes
-│   ├── engine-cli/        # UCI engine interface
-│   └── stockfish-cli/     # Stockfish integration
+│   ├── main/              # Main GUI with menu system and all game modes
+│   │   └── main.go        # GUI application entry point
+│   ├── engine-cli/        # UCI client (works with any UCI engine: Stockfish, etc.)
+│   │   └── main.go        # Interactive UCI client
+│   └── engine/            # Standalone GoChess UCI engine
+│       └── main.go        # Engine executable entry point
 ├── internal/
 │   ├── chess/             # Core chess logic
 │   │   ├── bitboard.go    # Bitboard operations & magic bitboards
 │   │   ├── board.go       # Board state & move execution
 │   │   ├── movegen.go     # Move generation & legal filtering
+│   │   ├── move.go        # Move representation and execution
+│   │   ├── move_consts.go # Move flags and constants
 │   │   ├── fen.go         # FEN parsing/generation
-│   │   └── piece.go       # Piece representation
-│   └── engine/            # Chess engine (UCI)
+│   │   ├── piece.go       # Piece representation
+│   │   └── *_test.go      # Comprehensive test suite
+│   ├── engine/            # Chess engine implementation
+│   │   ├── engine.go      # Main engine with async search
+│   │   └── search.go      # Search algorithms
+│   └── uci/               # Complete UCI communication layer
+│       ├── client.go      # UCI client (TCP and process)
+│       ├── server.go      # UCI server infrastructure
+│       ├── commands.go    # UCI command helpers
+│       ├── responses.go   # Response parsing utilities
+│       └── example_usage.go # Usage documentation
 ├── gui/                   # Ebiten-based GUI with menu system
-│   ├── app.go            # Main application state management
+│   ├── app.go            # Application state management
 │   ├── menu.go           # Main menu interface
-│   └── game.go           # Chess game interface
+│   ├── game.go           # Chess game interaction
+│   ├── ui.go             # Board rendering and graphics
+│   └── audio.go          # Sound effects
 └── assets/               # Graphics and audio resources
 ```
 
