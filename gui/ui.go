@@ -5,17 +5,15 @@ import (
 	"image"
 	"image/color"
 	"os"
-	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/srwiley/oksvg"
 	"github.com/srwiley/rasterx"
 )
 
 const (
-	WindowWidth  = 900
-	WindowHeight = 900
+	WindowWidth  = 1000
+	WindowHeight = 1000
 	BoardSize    = 800
 	SquareSize   = BoardSize / 8
 )
@@ -167,7 +165,6 @@ func generateBackground() (*ebiten.Image, error) {
 		for file := range 8 {
 			x := file * SquareSize
 			y := (7 - rank) * SquareSize
-			index := rank*8 + file
 			var square *ebiten.Image
 			var c color.RGBA
 			if (rank+file)%2 == 0 {
@@ -177,8 +174,6 @@ func generateBackground() (*ebiten.Image, error) {
 			}
 			square, opts := makeSquare(c)
 			opts.GeoM.Translate(float64(x), float64(y))
-			// add the index to the top left of the square for debugging
-			ebitenutil.DebugPrint(square, strconv.Itoa(index))
 			background.DrawImage(square, opts)
 		}
 	}

@@ -1,10 +1,14 @@
 package gui
 
 import (
+	"errors"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/jgerontis/go-chess/internal/chess"
 )
+
+var ErrReturnToMenu = errors.New("return to main menu")
 
 // Game is going to manage the game state and interface with ebitengine and the chess engine.
 type Game struct {
@@ -55,6 +59,10 @@ func (g *Game) MakeMove(move chess.Move) {
 }
 
 func (g *Game) Update() error {
+	// Check for escape key to return to main menu
+	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		return ErrReturnToMenu
+	}
 	// start by getting the mouse coordinates
 	x, y := ebiten.CursorPosition()
 	rank, file := g.mouseCoordsToBoardCoords(x, y)

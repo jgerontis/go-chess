@@ -29,15 +29,18 @@ A high-performance chess engine and GUI implementation written in Go, featuring 
 git clone https://github.com/jgerontis/go-chess.git
 cd go-chess
 
-# Run the GUI debug version
+# Run the main GUI (starts with menu)
 go run ./cmd/gui-debug
 
-# Or try other game modes
-go run ./cmd/human-vs-ai    # Play against the AI
-go run ./cmd/ai-vs-ai       # Watch AI vs AI
-go run ./cmd/engine-cli     # UCI engine interface
+# Or skip directly to specific modes
+go run ./cmd/gui-debug --debug           # Manual piece movement
+go run ./cmd/gui-debug --human-vs-ai     # Play against AI
+go run ./cmd/gui-debug --ai-vs-ai        # Watch AI vs AI
+go run ./cmd/engine-cli                  # UCI engine interface
 
-# Run with a custom position (FEN string)
+# Run with custom position
+go run ./cmd/gui-debug --fen "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
+# Legacy format still supported
 go run ./cmd/gui-debug "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1"
 ```
 
@@ -64,7 +67,8 @@ go build ./cmd/...
 - Legal move filtering and check detection
 - Special moves (en passant, castling, promotion)
 - FEN parsing and board representation
-- Basic GUI with multiple game modes
+- GUI with main menu and game mode selection
+- Command line argument parsing and navigation
 - UCI protocol foundation
 
 ### 🚧 **In Progress**
@@ -101,10 +105,9 @@ go build ./cmd/...
 
 ```
 ├── cmd/                    # Executable entry points
-│   ├── gui-debug/         # Main GUI application
-│   ├── human-vs-ai/       # Human vs AI mode
-│   ├── ai-vs-ai/          # AI vs AI mode
-│   └── engine-cli/        # UCI engine interface
+│   ├── main/         # Main GUI with menu system and all game modes
+│   ├── engine-cli/        # UCI engine interface
+│   └── stockfish-cli/     # Stockfish integration
 ├── internal/
 │   ├── chess/             # Core chess logic
 │   │   ├── bitboard.go    # Bitboard operations & magic bitboards
@@ -113,7 +116,10 @@ go build ./cmd/...
 │   │   ├── fen.go         # FEN parsing/generation
 │   │   └── piece.go       # Piece representation
 │   └── engine/            # Chess engine (UCI)
-├── gui/                   # Ebiten-based GUI
+├── gui/                   # Ebiten-based GUI with menu system
+│   ├── app.go            # Main application state management
+│   ├── menu.go           # Main menu interface
+│   └── game.go           # Chess game interface
 └── assets/               # Graphics and audio resources
 ```
 
