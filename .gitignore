@@ -3,6 +3,8 @@ stockfish*
 
 # Binaries
 *.exe
+my-engine
+engine
 
 # IDE and Agent Stuff
 .DS_Store
